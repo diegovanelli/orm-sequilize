@@ -10,8 +10,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Register.belongsTo(models.Person)
-      Register.belongsTo(models.Class)
+      Register.belongsTo(models.Person, {
+        foreignKey: 'student_id'
+      })
+      Register.belongsTo(models.Class, {
+        foreignKey: 'class_id'
+      })
     }
   }
   Register.init({

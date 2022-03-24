@@ -8,5 +8,9 @@ router.get('/people/:id', PeopleController.getPerson);
 router.post('/people', PeopleController.createPerson);
 router.put('/people/:id', PeopleController.updatePerson);
 router.delete('/people/:id', PeopleController.deletePerson);
+router.get('/people/:studentId/register/:registerId', PeopleController.getRegister);
+router.post('/people/:studentId/register', PeopleController.createRegister);
+router.gut('/people/:studentId/register/:registerId', PeopleController.updateRegister);
+router.delete('/people/:studentId/register/:registerId', PeopleController.deleteRegister);
 
 module.exports = router;
