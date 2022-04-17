@@ -1,9 +1,10 @@
-const database = require('../models');
+const { PeopleServices } = require('../services')
+const peopleServices = new PeopleServices()
 
 class PeopleController {
     static async getPeopleActive(req, res) {
         try {
-            const people = await database.Person.findAll();
+            const people = await peopleServices.getActiveOne();
             return res.status(200).json(people);
         } catch(error) {
             return res.status(500).json(error.message);
@@ -12,7 +13,7 @@ class PeopleController {
 
     static async getPeople(req, res) {
         try {
-            const people = await database.Person.scope('all').findAll();
+            const people = await peopleServices.getAll();
             return res.status(200).json(people);
         } catch(error) {
             return res.status(500).json(error.message);
@@ -20,9 +21,9 @@ class PeopleController {
     }
     
     static async getPerson(req, res) {
+        const { id } = req.params;
         try {
-            const { id } = req.params;
-            const person = await database.Person.findOne({ where: { id: Number(id) }});
+            const person = await peopleServices.getOne({ id });
             return res.status(200).json(person);
         } catch (error) {
             return res.status(500).json(error.message);
@@ -30,9 +31,9 @@ class PeopleController {
     }
 
     static async createPerson(req, res) {
+        const newPerson = req.body;
         try {
-            const newPerson = req.body;
-            const person = await database.Person.create(newPerson);
+            const person = await peopleServices.create(newPerson);
             return res.status(200).json(person);
         } catch (error) {
             return res.status(500).json(error.message);
@@ -40,79 +41,60 @@ class PeopleController {
     }
 
     static async updatePerson(req, res) {
+        const { id } = req.params;
+        const newValues = req.body;
         try {
-            const { id } = req.params;
-            const newValues = req.body;
-            await database.Person.update(newValues, { where: { id: Number(id) }});
-            const person = await database.Person.findOne({ where: { id: Number(id) }});
-            return res.status(200).json(person);
+            await peopleServices.update(newValues, Number(id));
+            return res.status(200).json({ message: `id ${id} updated` })
         } catch (error) {
             return res.status(500).json(error.message);
         }
     }
 
     static async deletePerson(req, res) {
+        const { id } = req.params;
         try {
-            const { id } = req.params;
-            await database.Person.destroy({ where: { id: Number(id) }});
+            await peopleServices.remove(Number(id));
             return res.status(200).json({ message: `Id ${id} deleted!`});
         } catch (error) {
             return res.status(500).json(error.message);
         }
     }
 
-    static async getRegister(req, res) {
+    static async restorePerson(req, res) {  
+        const { id } = req.params
         try {
-            const { studentId, registerId } = req.params;
-            const Register = await database.Register.findOne({ 
-                where: { 
-                    id: Number(registerId),
-                    student_id: Number(studentId)
-                } 
+          const personRestored = await peopleServices
+            .restore(Number(id))
+          return res.status(200).json(personRestored)
+        } catch (error) {
+          return res.status(500).json(error.message)
+        }
+      }
+
+    static async getRegisters(req, res) {
+        const { studentId } = req.params;
+        try {
+            const registers = await peopleServices.getRegisterToStudent({
+                    id: Number(studentId), 
             });
-            return res.status(200).json(Register);
+            return res.status(200).json(registers);
         } catch (error) {
             return res.status(500).json(error.message);
         }
     }
 
-    static async createRegister(req, res) {
+    static async cancelPerson(req, res) {  
+        const { studentId } = req.params
         try {
-            const { studentId } = req.params;
-            const newRegister = { ...req.body, student_id: Number(studentId) };;
-            const newRegisterCreated = await database.Register.create(newRegister);
-            return res.status(200).json(newRegisterCreated);
+          await peopleServices.cancelPersonAndRegister(Number(studentId))
+          return res
+            .status(200)
+            .json({message: `registers ref. student ${studentId} canceled`}) 
         } catch (error) {
-            return res.status(500).json(error.message);
+          return res.status(500).json(error.message)
         }
-    }
-
-    static async updateRegister(req, res) {
-        try {
-            const { studentId, registerId } = req.params;
-            const newValues = req.body;
-            await database.Register.update(newValues, { 
-                where: { 
-                    id: Number(registerId),
-                    student_id: studentId
-                }
-            });
-            const registerUpdated = await database.Register.findOne({ where: { id: Number(registerId) } });
-            return res.status(200).json(registerUpdated);
-        } catch (error) {
-            return res.status(500).json(error.message);
-        }
-    }
-
-    static async deleteRegister(req, res) {
-        try {
-            const { registerId } = req.params;
-            await database.Register.destroy({ where: { id: Number(registerId) } });
-            return res.status(200).json({ message: `Id ${registerId} deleted!` });
-        } catch (error) {
-            return res.status(500).json(error.message);
-        }
-    }
+      }
 }
 
 module.exports = PeopleController;
